@@ -245,9 +245,6 @@ def run(
             "posterior_var",
         ])
 
-        best_mean = -1.0
-        best_id = None
-
         for t in range(1, iters + 1):
             chosen_id, sample = thompson_select(posteriors, rng)
 
@@ -265,11 +262,6 @@ def run(
             mean = pb.mean()
             var = pb.var()
 
-            # track best by posterior mean
-            if mean > best_mean:
-                best_mean = mean
-                best_id = chosen_id
-
             writer.writerow([
                 t,
                 chosen_id,
@@ -284,14 +276,15 @@ def run(
 
     # print a short summary
     print(f"Saved log to: {log_csv_path}")
-    # top-5 by posterior mean
+
     ranked = sorted(posteriors.items(), key=lambda kv: kv[1].mean(), reverse=True)
     print("\nTop pathways by posterior mean:")
     for pid, pb in ranked[:5]:
         print(f"  {pid:>10s}  mean={pb.mean():.3f}  var={pb.var():.4f}  name={id_to_name.get(pid,'')}")
-    if best_id is not None:
-        print(f"\nBest (by posterior mean): {best_id}  mean={best_mean:.3f}")
 
+    # Best at the END of the run
+    best_id, best_pb = ranked[0]
+    print(f"\nBest (final, by posterior mean): {best_id}  mean={best_pb.mean():.3f}")
 
 def main() -> None:
     parser = argparse.ArgumentParser()
